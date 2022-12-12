@@ -21,9 +21,13 @@ data <- data %>% select(-fg_apt_id, -fg_apt, -fg_wac)
 states_abb <- states_abb[!states_abb$states == 'Alaska',]
 
 data <- merge(data, states_abb, by.x = "STATE", by.y = "abbreviations")
+data$carriergroup = ifelse(data$carriergroup == 1, "Domestic", "Foreign")
 
 # Adios Alaska and territories
 airports <- merge(airports, states_abb, by.x = "STATE", by.y = "abbreviations")
+
+# Have the same airports in airports and in data
+airports <- subset(airports, airports$AIRPORT %in% data$AIRPORT)
 
 
 # Add centroids to states in case I want to use them
@@ -70,10 +74,10 @@ ui <- navbarPage("U.S. Airports",
                                           selectize = T,
                                           multiple = T), 
                               tabsetPanel(
-                                tabPanel(title = "Bar Chart", plotOutput(outputId = "scatterplot")),
+                                tabPanel(title = "Passengers per type of carrier", plotOutput(outputId = "barchart_carrier")),
                                 tabPanel(title = "Tree Map", plotOutput(outputId = "tree_map")),
                                 tabPanel(title = "Heat Map", plotOutput(outputId = "heat_map"))
-                              ),
+                              )
                               
                                                   
                               # Select State
@@ -188,10 +192,16 @@ server <- function(input, output, session) {
       # }
   })
 
+  data_barchart <- reactive({
+    data_filtered()  %>% 
+      group_by(Year, carriergroup) %>%
+      summarise(total_passengers = sum(Total))
+  })
   
-  output$scatterplot <- renderPlot({
-    ggplot(data = data_filtered()[0:1000,], aes_string(x = 'Total', y = 'Charter')) +
-      geom_point()
+  
+  output$barchart_carrier <- renderPlot({
+    ggplot(data_barchart(), aes(x = Year, y = total_passengers, fill = carriergroup)) + 
+      geom_bar(stat = 'identity')
   })
 
   
@@ -220,20 +230,34 @@ server <- function(input, output, session) {
   #   return(states_altered)
   # })
   
+  
+  
 
   # Replace layer with filtered airports
   observe({
-    # If the greenInf changes, then we do the rest
+    # If the airports change, then we do the rest
     airport_filtered <- AirportInputs()
+    
+    # What if I create a join here to add the total of the airports selected
+    # This is the data already filtered, containing only the relevant airports, same airports as in airport_filtered
+    data_filtered()
+    
+    
+    aggregate_passengers <- data_filtered() %>%
+      group_by(AIRPORT) %>%
+      summarise(Total_Passengers = sum(Total))
+    passengers_airports <-  merge(aggregate_passengers, airport_filtered, by.x = "AIRPORT", by.y = "AIRPORT")
+    
+    
     # Data is greenInf
-    leafletProxy("leaflet", data = airport_filtered) %>%
+    leafletProxy("leaflet", data = passengers_airports) %>%
       # In this case either lines 90 or 92 will work
       # 1 First clear all the markers, make the map blank
       clearMarkers() %>%
       # we can also clear group, just in case
       # clearGroup(group = "greenInf") %>%
       # Apply the awesome markers, sewer_type is the data that we want to apply the icons to. The icons is defined up there
-      addAwesomeMarkers(icon = ~icons[AIRPORT], popup = ~paste0("<b>", 'project_na', "</b>: ", AIRPORT), group = "airport_filtered")#, layerId = ~asset_id)
+      addAwesomeMarkers(icon = ~icons[AIRPORT], popup = ~paste0("<b>", 'project_na', "</b>: ", AIRPORT, '<p>', 'Total passengers: ', formatC(Total_Passengers, big.mark=",", format="d"), '</p>' ), group = "passengers_airports")#, layerId = ~asset_id)
     # leafletProxy("leaflet") %>% update
   })
   # Data Table
