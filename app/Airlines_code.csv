@@ -4,16 +4,16 @@
 05Q,"Comlux Aviation, AG"
 06Q,Master Top Linhas Aereas Ltd.
 07Q,Flair Airlines Ltd.
-09Q,"Swift Air, LLC d/b/a Eastern Air Lines d/b/a Eastern"
+09Q,Swift Air
 0BQ,DCA
 0CQ,ACM AIR CHARTER GmbH
 0FQ,"Maine Aviation Aircraft Charter, LLC"
-0GQ,"Inter Island Airways, d/b/a Inter Island Air"
-0HQ,Polar Airlines de Mexico d/b/a Nova Air
+0GQ,Inter Island Airways
+0HQ,Polar Airlines de Mexico
 0J,JetClub AG
 0JQ,Vision Airlines
 0LQ,"Metropix UK, LLP."
-0MQ,"Multi-Aero, Inc. d/b/a Air Choice One"
+0MQ,"Multi-Aero, Inc"
 0OQ,Open Skies
 0Q,Flying Service N.V.
 0QQ,TAG Aviation  Ltd.
@@ -29,8 +29,8 @@
 14Q,London Air Services Limited
 15Q,Air Alsie A/S
 17Q,Albinati Aeronautics SA
-1AQ,Via Airlines d/b/a Charter Air Transport
-1BQ,"Eastern Airlines f/k/a Dynamic Airways, LLC"
+1AQ,Via Airlines
+1BQ,Eastern Airlines
 1DQ,Island Airlines LLC
 1EQ,"KaiserAir, Inc."
 1FQ,Alsek Air
@@ -47,9 +47,9 @@
 1SQ,Star Marianas Air Inc.
 1TQ,Rhoades Aviation dba Transair
 1UQ,Gainjet Aviation SA
-1WQ,Ultimate JetCharters LLC dba Ultimate Air Shuttle
+1WQ,Ultimate JetCharters LLC
 1XQ,Dassault Falcon Service
-1YQ,"Air Charter, Inc d/b/a Air Flamenco"
+1YQ,"Air Charter, Inc"
 1ZQ,Comlux Aruba NV
 20Q,Orange Air
 22Q,Gem Air LLC
@@ -58,12 +58,12 @@
 25Q,Mjet GmbH
 26Q,Albinati aviation Limited
 27Q,"Jet Aviation Flight Services, Inc."
-28Q,Menagerie Enterprises Inc d/b/a Monarch Air
+28Q,Menagerie Enterprises Inc
 29Q,Erickson Helicopters
 2AQ,ABS JETS A.S
 2BQ,Air Medical Ltd.
 2E,Smokey Bay Air Inc.
-2EQ,"J&M Alaska Air Tours, Inc. d/b/a Alaska Air Transit"
+2EQ,"J&M Alaska Air Tours, Inc."
 2F,Frontier Flying Service
 2GQ,Cavok Air LLC
 2HQ,Elite Airways LLC
@@ -72,35 +72,35 @@
 2KQ,Longtail Aviation Ltd.
 2LQ,Tropic Ocean Airways LLC
 2M,Midway Express Airlines
-2NQ,LIMA NY Corp d/b/a Fly The Whale d/b/a Tailwind
+2NQ,LIMA NY Corp
 2O,Island Air Service
 2OQ,Talofa Airways Limited
-2P,"Air Philippines Corp d/b/a Airphil Express, Philippines Airlines"
+2P,Air Philippines Corp
 2PQ,21 Air LLC
 2R,Regal Air
 2RQ,Luxaviation S A
 2T,Canada 3000 Airlines Ltd.
-2TQ,Trans Northern Airways d/b/a Air Unlimited Charter Services
+2TQ,Trans Northern Airways
 2U,Valley Air Express Inc.
 2UQ,Svenskt Industriflyg AB
-30Q,"Public Charters, Inc. d/b/a North Country Sky d/b/a Regional Sky d/b/a Texas Sky"
+30Q,"Public Charters, Inc"
 34Q,"Polaris Aviation Solutions, LLC"
-35Q,"Aztec Worldwide Airlines, Inc.  d/b/a  Aztec Airways"
-36Q,Air Hamburg Luftverkehrsgesellschaft mbH
+35Q,"Aztec Worldwide Airlines, Inc."
+36Q,Air Hamburg Luftverkehrsgesellschaft
 37,Zeal 320
-37Q,"Hillwood Airways, LLC  f/k/a   ATX Air Services, LLC"
+37Q,"Hillwood Airways, LLC"
 38Q,Key Lime Air Corporation
 3AQ,"Maritime Helicopters, Inc."
-3BQ,"Nealco Air Charter Services, Inc.  d/b/a  Watermakers Air"
+3BQ,"Nealco Air Charter Services, Inc."
 3C,"Regions Air, Inc."
 3CQ,"Andrew Airways, Inc."
 3DQ,"Rectrix Aviation, Inc."
-3EQ,"Scott Aviation, LLC  d/b/a  Silver Air"
+3EQ,"Scott Aviation, LLC"
 3F,"Pacific Airways, Inc."
-3FQ,"Western Air Charter, Inc.  d/b/a  Jet Edge"
+3FQ,"Western Air Charter, Inc"
 3M,Silver Airways
 3S,AeroLogic GmbH
-3SD,Compagnie Aerienne Inter Regionale Express dba Air Antilles Express & Air Guyane
+3SD,Compagnie Aerienne Inter Regionale Express
 3U,Sichuan Airlines Co Ltd.
 4B,Olson Air Service
 4C,Aerovias de Intergracian Regional
@@ -108,7 +108,7 @@
 4H,Belize Trans Air
 4M,LAN Argentina
 4N,Air North
-4O,ABC Aerolineas SA de CV dba Interjet
+4O,ABC Aerolineas SA de CV
 4R,Regent Air Corporation
 4S,Sol Air 
 4T,Belair Airlines Ltd.
@@ -121,7 +121,7 @@
 5G,"Skyservice Airlines, Inc."
 5J,Private Jet Expeditions
 5L,Aerosur
-5V,Tatonduk Outfitters Limited d/b/a Everts Air Alaska and Everts Air Cargo
+5V,Tatonduk Outfitters Limited
 5X,United Parcel Service
 5Y,Atlas Air Inc.
 6A,Aviacsa Airlines
@@ -130,7 +130,7 @@
 6F,Laker Airways Inc.
 6H,Israir Airlines
 6P,Pacific East Air Inc.
-6R,Aerounion Aerotransporte de Carga Union SA de CV
+6R,Aerounion
 6U,Air Ukraine
 6Y,Nicaraguense De Aviacion Sa
 7B,Krasair
@@ -144,10 +144,10 @@
 7N,Inland Aviation Services
 7P,Apa International Air S.A.
 7Q,Pan American World Airways Dominicana
-7S,Ryan Air f/k/a Arctic Transportation
+7S,Ryan Air
 7Z,Lb Limited
 8C,Air Transport International
-8D,"Dynamic Aviation, Inc. d/b/a Beacon"
+8D,"Dynamic Aviation, Inc."
 8E,Bering Air Inc.
 8F,Wilburs Inc.
 8I,Inselair Aruba NV
@@ -168,7 +168,7 @@
 9T,"TravelspanGT, Inc. S.A."
 9V,"Avior Airlines, C.A."
 9W,Jet Airways  Limited
-A0,Elysair d/b/a L'Avion
+A0,Elysair
 A2,Cielos De Peru
 A4,Southern Wind Airlines
 A7,Air Comet S.A.
@@ -223,13 +223,13 @@ AFE,Air Florida Express
 AFG,American Flight Group
 AFQ,Aero B Venezuela C.A.
 AFS,Arcata Flying Service
-AG,Arubaanse Luchtvaart Maatschappij NV dba Aruba Airlines
+AG,Arubaanse Luchtvaart Maatschappij
 AGA,Air Cargo America Inc.
 AGQ,Argo S. A.
 AHA,Air Alpha
 AHC,Air Hawaii
 AHQ,Air National
-AI,National Aviation Company of India Limited d/b/a Air India
+AI,National Aviation Company of India Limited
 AIA,All Island Air
 AIC,Air Caribbean
 AIE,Air Express Inc.
@@ -241,7 +241,7 @@ AIQ,Norontair
 AIT,Airways International
 AIY,Alliance Air
 AJ,Air Micronesia Inc.
-AJQ,Aerodynamics Inc. d/b/a SkyValue d/b/a SkyValue Airways
+AJQ,Aerodynamics Inc
 AKQ,Airmark Airlines Inc.
 AL,Skyway Airlines
 ALD,Allied Airlines
@@ -592,8 +592,8 @@ EXQ,Export Air Del Peru S.A.
 EXR,Executive Transport
 EY,Etihad Airways
 EZ,Evergreen International Inc.
-F2,Omega Air Holdings d/b/a Focus Air
-F8,Freedom Airlines d/b/a HP Expr
+F2,Omega Air Holdings
+F8,Freedom Airlines
 F9,Frontier Airlines Inc.
 FAA,Falwell Aviation Inc.
 FAC,Falcon Airways Inc.
@@ -601,7 +601,7 @@ FAQ,Fast Air Carrier Ltd.
 FAR,Federal Armored Service Inc.
 FB,Translift Airways Limited
 FBI,Young Flying Service
-FC,Fast Colombia SAS d/b/a Viva Colombia
+FC,Fast Colombia SAS
 FCA,Southern Airlines Inc.
 FCQ,Falcon Air Express
 FD,Air Puerto Rico Airlines
@@ -639,7 +639,7 @@ FYB,Flying Boat
 FYQ,Flying Group Lux S.A.
 G3,Aerochago S.A.
 G4,Allegiant Air
-G7,GoJet Airlines LLC d/b/a United Express
+G7,GoJet Airlines LLC
 GA,P.T. Garuda Indonesian Arwy
 GAL,Galena Air Service
 GAQ,Galaxy Airlines Inc.
@@ -761,10 +761,10 @@ ITQ,Interamericana De Aviacion
 IW,Air Liberte Aka Aom Minerve
 IXQ,Inair
 J2,Azerbaijan Airlines CJSC
-J5,Kalinin Aviation LLC d/b/a Alaska Seaplanes
+J5,Kalinin Aviation LLC
 J6,Larrys Flying Service
 J7,Valujet Airlines Inc.
-JAG,JetAlliance Flugbetriebs d/b/a JAF Airservice
+JAG,JetAlliance Flugbetriebs
 JAM,Sunbelt Airlines Inc.
 JAQ,Jamaica Air Freighters
 JB,Helijet International Inc.
@@ -792,8 +792,8 @@ JW,Arrow Air Inc.
 JX,Southeast Airlines
 JXQ,Allarco Developments Ltd.
 JZ,Japan Air Charter Co. Ltd.
-K2,"Paklook Air, Inc d/b/a/ Airlift Alaska d/b/a/ Yute Commuter Service"
-K3,Venture Travel LLC d/b/a Taquan Air Service
+K2,"Paklook Air, Inc"
+K3,Venture Travel LLC
 K5,"Seaport Airlines, Inc."
 K7,Arizona Express
 K8,Dutch Caribbean Airlines
@@ -833,7 +833,7 @@ KX,Cayman Airways Limited
 KXZ,Chaparral Airlines Inc.
 KZ,Nippon Cargo Airlines
 L2,Lynden Air Cargo Airlines
-L3,Lynx Aviation d/b/a Frontier Airlines
+L3,Lynx Aviation
 L7,Lan Colombia
 LA,Lan-Chile Airlines
 LAA,La Skycab Airline
@@ -851,7 +851,7 @@ LCT,Lake Coastal
 LDM,Lauda Motion GmbH
 LEQ,Le Point Air
 LEX,L'Express
-LF,CFM Inc d/b/a Contour Airlines d/b/a One Jet Shuttle
+LF,CFM Inc
 LG,Luxair
 LGQ,Lineas Aereas Allegro
 LH,Lufthansa German Airlines
@@ -947,7 +947,7 @@ MZ,P.N. Merpati Nusantara Air.
 N5,Skagway Air Service
 N6,Aero Continente
 N7,National Airlines
-N8,National Air Cargo Group Inc d/ba National Airlines
+N8,National Air Cargo Group Inc
 NA,North American Airlines
 NAC,National Air Commuter Inc.
 NAP,Npa Inc.
@@ -1127,13 +1127,13 @@ QO,Aeromexpress
 QOZ,Bar Harbor Airways
 QQ,Reno Air Inc.
 QR,Qatar Airways 
-QS,"Travel Service, a.s. d/b/a SmartWings"
+QS,Travel Service
 QT,Transportes Aereos Mercantiles Panamericanos S.A
 QTQ,Aer Turas Teoranta
 QWE,Qwest Commuter
 QX,Horizon Air
 QY,European Air Transport Leipzig GmbH
-R0,Tantalus Air Ltd. d/b/a Harbour Air d/b/a Harbour Air Seaplanes
+R0,Tantalus Air Ltd.
 R2,Orenburg Airlines
 R3,Air Company Yakutia
 RAL,Royal-Air Ltd.
@@ -1290,7 +1290,7 @@ SWA,Sunwest Airlines
 SWT,Swift Aire Lines Inc.
 SX,"Skybus Airlines, Inc."
 SXP,Sierra Expressway
-SY,Sun Country Airlines d/b/a MN Airlines
+SY,Sun Country Airlines
 SYB,Skybus Express Airlines
 SYM,Skymaster
 SZQ,Aerolineas El Salvador S A
@@ -1303,7 +1303,7 @@ TAL,Tejas Airlines Inc.
 TAQ,Taquan Air Service
 TAS,Yosemite Airlines Inc.
 TAT,Talarik Creek Air Taxi
-TB,TUI Airlines Belgium N.V. d/b/a Jetairfly
+TB,TUI Airlines Belgium N.V.
 TBQ,Triair Bermuda Flt Operations
 TCA,Trans Catalina Airlines
 TCE,Oceanair Line
@@ -1338,7 +1338,7 @@ TNS,Transtate Aviation
 TP,Tap-Portuguese Airlines
 TPQ,Aerial Transit Company
 TQQ,Taca Peru
-TR,Scoot Tigerair Pte Ltd d/b/a Scoot
+TR,Scoot Tigerair Pte Ltd
 TRA,Aeromexico Travel
 TRI,Great Plains Airlines Inc.
 TRO,Air Molakai
@@ -1363,7 +1363,7 @@ TXE,Trans Air
 TXQ,British Caribbean Airways
 TXY,Texas Airways
 TYE,Temsco Airlines
-TZ,ATA Airlines d/b/a ATA
+TZ,ATA Airlines
 TZQ,First Choice Airways
 U2,UFS Inc.
 U5,USA 3000 Airlines
@@ -1394,7 +1394,7 @@ VA,Virgin Blue International Airlines t/a V Australia
 VAG,Vagabond Aviation Inc.
 VAQ,Vacationair
 VAS,Valley Air Services
-VB,"Aeroenlaces Nacionales, S.A. de C.V. d/b/a VivaAerobus"
+VB,"Aeroenlaces Nacionales, S.A. de C.V."
 VC,Servicios Avensa
 VCQ,Victory Air Transport Inc.
 VE,Aerovias Venezolanas-Avensa
@@ -1452,7 +1452,7 @@ WI,Sky Lease Cargo
 WIA,Wisc Air
 WIL,Will's Air
 WIR,Williams Air Inc.
-WL,"Caribbean Sun Airlines, Inc. d/b/a World Atlantic Airlines"
+WL,"Caribbean Sun Airlines, Inc."
 WLH,Welch Aviation
 WLQ,Worldwide Airlines Inc.
 WM,Windward Islands Airways
@@ -1471,14 +1471,14 @@ WST,Friday Harbor Seaplanes
 WSU,Mission Air
 WT,Nigeria Airways Ltd.
 WTA,Westates Airlines
-WV,"Air Greco, Inc., d/b/a Wings Air"
+WV,"Air Greco, Inc.,"
 WW,WOW Air ehf
 WWI,Wings West Airlines
 WWQ,Worldways Canada Ltd.
 X4,Air Excursions LLC
 X9,Omni Air International LLC
 XAA,Aero Union Corp
-XAB,Air Polynesia d/b/a DHL Cargo
+XAB,Air Polynesia
 XAC,Air Express International Airlines
 XAE,Amerford Airways Inc.
 XAF,Astro-Wing Airlines Inc.
@@ -1523,22 +1523,22 @@ XJ,Mesaba Airlines
 XK,Aerotal
 XL,Lan Ecuador
 XP,XTRA Airways
-XPA,Express Air d/b/a Sunrise
+XPA,Express Air
 XPQ,International Cargo Xpress
 XV,Presidential Airways Inc.
 XY,Munz Northern Airlines Inc.
 XYZ,Airpac Inc.
-Y2,Globespan Airways Limited d/b/a Flyglobespan
+Y2,Globespan Airways Limited
 Y4,Concesionaria Vuela Compania De Aviacion SA de CV 
-Y7,Flyjet Limited d/b/a Silverjet
+Y7,Flyjet Limited
 Y8,Yangtze River Express Airlines Company
 YB,Trans Continental Airlines
 YBQ,Yellow Bird Air
 YM,Royal West Airlines
-YR,"Grand Canyon Airlines, Inc. d/b/a Grand Canyon Airlines d/b/a Scenic Airlines"
+YR,"Grand Canyon Airlines, Inc."
 YV,Mesa Airlines Inc.
 YX,Republic Airways
-Z3,"Bidzy Ta Hot Aana, Inc. d/b/a Tanana Air Service"
+Z3,"Bidzy Ta Hot Aana, Inc."
 Z3Q,"PM Air, LLC"
 ZA,Accessair Holdings
 ZAQ,Zas Airline Of Egypt
@@ -1560,3 +1560,15 @@ ZW,Air Wisconsin Airlines Corp
 ZX,Air Georgian
 ZY,Atlantic Gulf Airlines
 ZYZ,Skyway Aviation Inc.
+MMQ,Miami Air International
+DFQ,Condor Flugdienst
+BRQ,Caledonian Airways
+EVQ,"Aeroejecutivo, S.A."
+LM,Alm Antillean Airlines
+MSQ,Martinair Holland N.V.
+RYQ,Ryan International Airlines
+SYQ,Sun Country Airlines
+TTQ,Canada 3000 Airlines
+USQ,Us Airways
+UXQ,Air Europa
+XG,North American Airlines

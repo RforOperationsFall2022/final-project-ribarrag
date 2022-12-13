@@ -7,6 +7,7 @@ library(sf)
 library(datasets)
 library(shinyWidgets)
 library(treemapify)
+library(stringr)
 
 # Read in data 
 airports <- read_csv("airports.csv")
@@ -51,6 +52,8 @@ data <- data %>% filter(data$AIRPORT %in% nosmall_airports$AIRPORT)
 # Have the same airports in airports and in data
 airports <- subset(airports, airports$AIRPORT %in% data$AIRPORT)
 
+# Discard data with nulls
+data <- na.omit(data)
 
 
 icons <- awesomeIconList(
@@ -205,6 +208,7 @@ server <- function(input, output, session) {
   })
 
   data_barchart <- reactive({
+    req(input$airport_select)
     data_forbar <- data_filtered()
     data_forbar %>% 
       group_by(Year, carriergroup) %>%
@@ -212,11 +216,12 @@ server <- function(input, output, session) {
   })
 
   data_carriers <- reactive({
+    req(input$airport_select)
     data_filtered() %>%
     group_by(Airline) %>%
     summarise(total_passengers = sum(Total), .groups = "drop_last") %>%
     arrange(desc(total_passengers)) %>%
-    top_n(3, total_passengers)
+    top_n(5, total_passengers)
     
     # data_carriers <- add_row(data_carriers(), Airline = 'Other', total_passengers = sum(data_filtered()$Total) - sum(data_carriers()$total_passengers))
   })
@@ -227,6 +232,9 @@ server <- function(input, output, session) {
   output$barchart_carrier <- renderPlot({
     ggplot(data_barchart(), aes(x = Year, y = total_passengers, fill = carriergroup)) + 
       geom_bar(stat = 'identity')
+  
+    
+    
   })
   
   
@@ -236,10 +244,13 @@ server <- function(input, output, session) {
   # 
 
   
-  # cambios: hacer bargraph y con top 3
+  # cambios: hacer bargraph y con top 5
   output$treemap_carrier <- renderPlot({
-    ggplot(data_carriers(), aes(x = Airline, y = total_passengers)) +
-      geom_bar(stat = 'identity')
+    ggplot(data_carriers(), aes(x = reorder(Airline, desc(total_passengers)), y = total_passengers)) +
+      geom_bar(stat = 'identity') +
+      scale_x_discrete(labels =str_wrap((data_carriers()$Airline), width = 10)) +
+      theme(axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 12, face = 'bold')) + 
+      xlab("Airline") 
   })
 
   

@@ -78,8 +78,10 @@ nosmall_airports <- data %>% group_by(STATE, AIRPORT) %>%
   filter(total_passengers >= 500)
 
 data <- data %>% filter(data$AIRPORT %in% nosmall_airports$AIRPORT)
-# hasta aqui
-
+data <- na.omit(data)
+# hasta aqui el discard de pequenos
+# Fill some data
+# data$Airline[data$airlineid == 20402] <- "Miami Air International"
 
 
 aggregate_passengers <- data %>%
@@ -88,7 +90,12 @@ aggregate_passengers <- data %>%
 passengers_airports <-  merge(aggregate_passengers, airports, by.x = "AIRPORT", by.y = "AIRPORT")
 passengers_airports
 
+# END CLEAN DATA, not sure if previous two lines are RELEVANT???!!!
 
+nrow(data_2)
+nrow(data)
+((setdiff(data, data_2))$carrier)
+View(data[data$Airline == "", ])
 
 
 View(states)
@@ -164,11 +171,16 @@ table(data$carrier)
 # This will be reactive on the filtered data
 
 # Im creating the top 5
-df_carriers <- data %>% 
-  group_by(Airline) %>%
+df_carriers <- data %>%
+  filter(data$STATE %in% c('AL')) %>% 
+  group_by(Airline, carrier) %>%
   summarise(total_passengers = sum(Total)) %>%
   arrange(desc(total_passengers)) %>% 
   top_n(5, total_passengers)
+df_carriers
+
+View(data %>% filter(data$STATE %in% c('AL')))
+
 # Then I add the Others 
 df_carriers <- add_row(df_carriers, Airline = 'Other', total_passengers = sum(data$Total) - sum(df_carriers$total_passengers))
 # Then I plot this thing in a beautiful PIE
@@ -193,6 +205,7 @@ ggplot(df_carriers, aes(area = total_passengers, fill = total_passengers, label 
 
 df_carriers
 
+sum(is.na(data$Airline))
 
 # Create category other
 
