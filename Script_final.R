@@ -7,6 +7,9 @@
 # Source polygons states:
 # https://eric.clst.org/tech/usgeojson/
 
+# Airlines codes:
+# https://www.bts.gov/topics/airlines-and-airports/airline-codes
+
 library(readr)
 library(magrittr)
 library(dplyr)
@@ -18,6 +21,7 @@ library(ggplot2)
 library(lubridate)
 library(reshape2)
 library(tidyr)
+library(treemapify)
 
   
 datasets::state.abb
@@ -29,7 +33,7 @@ names(states_abb) <- c("states", "abbreviations")
 # Adios Alaska
 states_abb <- states_abb[!states_abb$states == 'Alaska',]
 
-
+Airlines_code <- read_csv("app/Airlines_code.csv")
 
 airports <- read_csv("airports.csv")
 passengers <- read_csv("International_Report_Passengers.csv")
@@ -65,13 +69,17 @@ nrow(states)
 states <- states[!(states$NAME %in% c('Alaska', 'District of Columbia', 'Puerto Rico')),]
 airports <- subset(airports, airports$AIRPORT %in% data$AIRPORT)
 
+data <- merge(data, Airlines_code, by.x = "carrier", by.y = "Code", all.x = TRUE)
 
 
+# discard very small airports
+nosmall_airports <- data %>% group_by(STATE, AIRPORT) %>% 
+  summarise(total_passengers = sum(Total)) %>% 
+  filter(total_passengers >= 500)
 
+data <- data %>% filter(data$AIRPORT %in% nosmall_airports$AIRPORT)
+# hasta aqui
 
-
-# Only keep the main airports for each state:
-data
 
 
 aggregate_passengers <- data %>%
@@ -117,29 +125,6 @@ ggplot(data = data_reshaped) +
 
 
 
-melted_sale_amount <- melt(data[, c('Year', 'carriergroup', "Total")], id = 'Year')
-
-melted_sale_amount
-ggplot(data = melted_sale_amount, aes(x = Year, fill = value)) + 
-  geom_bar(stat = "count") + 
-  ggtitle('How much do people spend in each type of grocery, by month') +
-  labs(y = 'Total Passengers') 
-
-  scale_x_continuous(breaks = 1:12, labels = month.name)
-
-
-ggplot(data = data, aes(x = Year, fill = carriergroup)) + 
-    geom_bar(stat = "count") + 
-    labs(x = "Year", y = "Total Passengers")
-
-
-
-
-
-df_transformed <- data %>% 
-  group_by(Year, carriergroup) %>%
-  summarise(total_passengers = sum(Total)) %>%
-  pivot_wider(id_cols = Year, names_from = carriergroup, values_from = total_passengers)
 
 df_transformed <- data %>% 
   group_by(Year, carriergroup) %>%
@@ -150,8 +135,103 @@ df_transformed
 ggplot(df_transformed, aes(x = Year, y = total_passengers, fill = carriergroup)) + 
   geom_bar(stat = 'identity')
   
+# this is the second graph I need
+
+ggplot(data, aes(x = Year, y = Total)) + 
+  geom(stat = 'identity')
+
+data$date_column <- ymd(paste(data$Year, data$Month, 1, sep = "-"))
+
+df_last_6_years <- data %>%
+  filter(Year >= max(Year) - 6)
+
+df_last_6_years <- df_last_6_years %>%
+  group_by(date_column) %>%
+  summarise(total_passengers = sum(Total))
+df_last_6_years
+
+ggplot(df_last_6_years, aes(x=date_column, y=total_passengers)) + 
+  geom_line() 
+  # scale_x_discrete(name="Year")  +
+  scale_y_continuous(name="Total") +
+  labs(title="Total Over Time") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+colnames(data)
+table(data$carrier)
+
+# we can do something witht he carriers, lets say, plot the proportion of flights by the top 5 carriers
+# This will be reactive on the filtered data
+
+# Im creating the top 5
+df_carriers <- data %>% 
+  group_by(Airline) %>%
+  summarise(total_passengers = sum(Total)) %>%
+  arrange(desc(total_passengers)) %>% 
+  top_n(5, total_passengers)
+# Then I add the Others 
+df_carriers <- add_row(df_carriers, Airline = 'Other', total_passengers = sum(data$Total) - sum(df_carriers$total_passengers))
+# Then I plot this thing in a beautiful PIE
+
+# DEBUG
+df_carriers <- data %>% 
+  group_by(Airline) %>%
+  summarise(total_passengers = sum(Total)) %>%
+  arrange(desc(total_passengers)) %>% 
+  top_n(5, total_passengers) 
+#%>% 
+  add_row(df_carriers, Airline = 'Other', total_passengers = sum(data$Total) - sum(df_carriers$total_passengers))
+  
+df_carriers
+
+# Im here with the treemap
+
+ggplot(df_carriers, aes(area = total_passengers, fill = total_passengers, label = Airline)) +
+  geom_treemap() +
+  geom_treemap_text(fontface = "italic", colour = "white", place = "centre",
+                    grow = TRUE)
+
+df_carriers
 
 
+# Create category other
+
+df_carriers2 <- data %>%
+  group_by(Airline) %>%
+  summarise(total_passengers = sum(Total)) %>%
+  arrange(desc(total_passengers)) %>%
+  top_n(5) %>%
+  mutate(Airline = ifelse(row_number() == 6, "Other", Airline))
+
+df_carriers2
+total_carriers2 <- sum(data$Total)
+df_carriers2 <- data %>%
+  group_by(Airline) %>%
+  summarise(total_passengers = sum(Total)) %>%
+  top_n(5, total_passengers) %>%
+  summarise(other_passengers = sum(total_passengers, na.rm=TRUE), 
+            count = n())
+
+df_carriers
+
+# Now create a pie chart
+
+
+
+colnames(Airlines_code)
+
+
+
+# Deberia de deshacerme de algunos aeropuertos?
+
+# cual es la suma de pasajeros para cada estado?
+
+
+
+View(data_nopequenos)
+data %>% group_by(STATE, AIRPORT) %>% 
+  summarise(total_passengers = sum(Total)) %>% 
+  filter(total_passengers <= 500)
 
 
 
@@ -160,7 +240,7 @@ ggplot(df_transformed, aes(x = Year, y = c(Domestic, Foreign), fill = c("Domesti
   geom_col(position = "dodge") +
   labs(x = "Year", y = "Total Passengers") +
   ggtitle("Total Passengers by Year") +
-  scale_fill_discrete(name = "Carrier")
+  scale_fill_discrete(name = "Carrier") 
 
 ggplot(df_transformed, aes(x = Year, y = Domestic)) +
   geom_bar(stat = "identity", width = 0.5) +
@@ -172,23 +252,3 @@ ggplot(df_transformed, aes(x = Year, y = Foreign)) +
 
 ggplot(df_transformed, aes(x = Year, y = Domestic)) +
   geom_bar(stat = "identity", width = 0.5)
-
-melted_sale_amount <- reactive({
-  data()[, c('Month', "MntWines", "MntFruits", 
-             "MntMeatProducts", "MntFishProducts", 
-             "MntSweetProducts", "MntGoldProds")] %>%
-    melt(id = 'Month')
-})
-
-
-# Stacked bar chart for Products tab
-output$stackedbar_purchases<- renderPlotly({
-  req(melted_sale_amount()$variable)
-  ggplot(data = melted_sale_amount(), aes(x = Month, fill = variable)) + 
-    geom_bar(stat = "count") + 
-    ggtitle('How much do people spend in each type of grocery, by month') +
-    labs(y = 'Amount ($)', fill = 'Gorcery type ') +
-    scale_x_continuous(breaks = 1:12, labels = month.name)
-})
-
-
