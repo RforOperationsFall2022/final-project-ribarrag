@@ -131,8 +131,6 @@ ggplot(data = data_reshaped) +
 
 
 
-
-
 df_transformed <- data %>% 
   group_by(Year, carriergroup) %>%
   summarise(total_passengers = sum(Total))
@@ -265,3 +263,20 @@ ggplot(df_transformed, aes(x = Year, y = Foreign)) +
 
 ggplot(df_transformed, aes(x = Year, y = Domestic)) +
   geom_bar(stat = "identity", width = 0.5)
+
+# falta:
+# Usar la otra layer: estados
+# Download button
+# Cambiar los iconos
+# Limpiar comentarios anteriores y var names y comentar
+# POner titulos
+# Cambiar formatos y colores
+# Pimpear mapa
+# Hacer graficas interactivas (plotly)
+
+
+subset_selection <- c("New Mexico", "Idaho")
+subset(states, states$NAME == subset_selection)
+
+
+class(airports)
