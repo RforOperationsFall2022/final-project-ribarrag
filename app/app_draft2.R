@@ -85,8 +85,12 @@ ui <- navbarPage("U.S. Airports",
                               tabsetPanel(
                                 tabPanel(title = "Total flyers over time, by carrier type", plotOutput(outputId = "barchart_carrier")),
                                 tabPanel(title = "Top 5 carriers, based on total flyers", plotOutput(outputId = "bar_carrier"))
-                              )
+                              ),
+                              
+                              downloadButton("downloadData", "Download Raw Data of Selection")
+                              
                             ),
+                            
                             
                             # Map Panel
                             mainPanel(
@@ -227,6 +231,17 @@ server <- function(input, output, session) {
   
   # Data Table
   output$table <- DT::renderDataTable(data_filtered(), options = list(scrollX = T))
+  
+  # Download
+  output$downloadData <- downloadHandler(
+    filename = function(){
+      paste("Airport_passengersdata_", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file){
+      write.csv(data_filtered(), file, row.names = FALSE)
+    }
+  )
+  
   # Print Inputs
   observe({
     print(reactiveValuesToList(input))

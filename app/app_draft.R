@@ -65,11 +65,11 @@ ui <- navbarPage("U.S. Airports",
                               
                               # Select State
                               pickerInput("state_select",
-                                           "Select State: (the map will show your states selected in RED",
-                                           choices = unique(sort(states$NAME)),
-                                           selected = "New Mexico", 
+                                          "Select State: (the map will show your states selected in RED",
+                                          choices = unique(sort(states$NAME)),
+                                          selected = "New Mexico", 
                                           multiple = T),
-          
+                              
                               
                               # Select State
                               selectInput("airport_select",
@@ -85,8 +85,12 @@ ui <- navbarPage("U.S. Airports",
                               tabsetPanel(
                                 tabPanel(title = "Total flyers over time, by carrier type", plotOutput(outputId = "barchart_carrier")),
                                 tabPanel(title = "Top 5 carriers, based on total flyers", plotOutput(outputId = "bar_carrier"))
-                              )
+                              ),
+                              
+                              downloadButton("downloadData", "Download Raw Data of Selection")
+                              
                             ),
+                            
                             
                             # Map Panel
                             mainPanel(
@@ -118,7 +122,7 @@ server <- function(input, output, session) {
       setView(-97.8216, 40.4469, 4) %>%
       addLayersControl(baseGroups = c("Google", "Wiki"))
   })
-
+  
   # Airport Filtered data
   AirportInputs <- reactive({
     
@@ -134,12 +138,12 @@ server <- function(input, output, session) {
     airport_filtered <- airports
     
     # Airports
-
+    
     airport_filtered <- subset(airport_filtered, airport_filtered$AIRPORT %in% input$airport_select)
     # }
     return(airport_filtered)
     
-    })
+  })
   
   data_filtered <- reactive({
     req(input$state_select) # I can control here, that if no state is selected, the map will not update
@@ -149,16 +153,16 @@ server <- function(input, output, session) {
     data_filtered <- subset(data_filtered, data_filtered$AIRPORT %in% input$airport_select)
     return(data_filtered)
   })
-    
+  
   # When input$state_select is changed, then the options available for aiport_select must change accordingly
   observeEvent(
     input$state_select, {
-  updateSelectInput(session, "airport_select",
-                      label = "Select airport",
-                      choices = subset(airports$AIRPORT, airports$states %in% input$state_select), 
-                      selected = input$airport_select)
-  })
-
+      updateSelectInput(session, "airport_select",
+                        label = "Select airport",
+                        choices = subset(airports$AIRPORT, airports$states %in% input$state_select), 
+                        selected = input$airport_select)
+    })
+  
   data_barchart <- reactive({
     req(input$airport_select)
     data_forbar <- data_filtered()
@@ -166,24 +170,24 @@ server <- function(input, output, session) {
       group_by(Year, carriergroup) %>%
       summarise(total_passengers = sum(Total), .groups = "drop_last")
   })
-
+  
   data_carriers <- reactive({
     req(input$airport_select)
     data_filtered() %>%
-    group_by(Airline) %>%
-    summarise(total_passengers = sum(Total), .groups = "drop_last") %>%
-    arrange(desc(total_passengers)) %>%
-    top_n(5, total_passengers)
+      group_by(Airline) %>%
+      summarise(total_passengers = sum(Total), .groups = "drop_last") %>%
+      arrange(desc(total_passengers)) %>%
+      top_n(5, total_passengers)
   })
-
+  
   
   output$barchart_carrier <- renderPlot({
     ggplot(data_barchart(), aes(x = Year, y = total_passengers, fill = carriergroup)) + 
       geom_bar(stat = 'identity')
-
+    
     
   })
-
+  
   
   # cambios: hacer bargraph y con top 5
   output$bar_carrier <- renderPlot({
@@ -193,7 +197,7 @@ server <- function(input, output, session) {
       theme(axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 12, face = 'bold')) + 
       xlab("Airline") 
   })
-
+  
   # Replace layer with filtered airports
   observe({
     # If the airports change, then we do the rest
@@ -212,10 +216,10 @@ server <- function(input, output, session) {
     leafletProxy("airports_map", data = passengers_airports) %>%
       # clear markers when aiirports changes, and the re do selection
       clearMarkers() %>%
-    addAwesomeMarkers(icon = icons, popup = ~paste0("<b>", 'project_na', "</b>: ", AIRPORT, '<p>', 'Total passengers: ', formatC(Total_Passengers, big.mark=",", format="d"), '</p>' ), group = "passengers_airports") %>% 
+      addAwesomeMarkers(icon = icons, popup = ~paste0("<b>", 'project_na', "</b>: ", AIRPORT, '<p>', 'Total passengers: ', formatC(Total_Passengers, big.mark=",", format="d"), '</p>' ), group = "passengers_airports") %>% 
       # clear shapes when state selection changes, and then re do selection
       clearShapes() %>%
-     addPolygons(data = states_tomap(), fillColor = "red", fillOpacity = 0.5, color = "black", weight = 1)
+      addPolygons(data = states_tomap(), fillColor = "red", fillOpacity = 0.5, color = "black", weight = 1)
   })
   
   # This is for the state part of the map
@@ -227,6 +231,17 @@ server <- function(input, output, session) {
   
   # Data Table
   output$table <- DT::renderDataTable(data_filtered(), options = list(scrollX = T))
+  
+  # Download
+  output$downloadData <- downloadHandler(
+    filename = function(){
+      paste("Airport_passengersdata_", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file){
+      write.csv(data_filtered(), file, row.names = FALSE)
+    }
+  )
+  
   # Print Inputs
   observe({
     print(reactiveValuesToList(input))
