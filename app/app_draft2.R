@@ -68,20 +68,24 @@ ui <- navbarPage("U.S. Airports",
                               pickerInput("state_select",
                                           "Select State: (the map will show your states selected in RED",
                                           choices = unique(sort(states$NAME)),
-                                          selected = "New Mexico", 
+                                          selected = c("California", "Pennsylvania"), 
                                           multiple = T),
                               
-                              
+                              # Select years
+                              sliderInput("years_select",
+                                          "Select consumer's age range:",
+                                          value = c(1998, 2014), 
+                                          max = max(data$Year), min = min(data$Year), 
+                                          step = 1, sep = ""),
+                          
                               # Select State
                               selectInput("airport_select",
                                           "Select airport",
                                           choices = unique(sort(airports$AIRPORT)),
-                                          # choices = unique(sort(states_filtered())),
-                                          # selected = tail(unique(sort(airports$AIRPORT)), 1),
-                                          selected = c("Albuquerque International"),
+                                          selected = c("San Diego International-Lindbergh", "Pittsburgh International"),
                                           selectize = T,
                                           multiple = T), 
-                              
+
                               # Two graph to display in two tabs in the left panel
                               tabsetPanel(
                                 tabPanel(title = "Total flyers over time, by carrier type", plotlyOutput("barchart_carrier")),
@@ -118,28 +122,18 @@ server <- function(input, output, session) {
   # Basic Map
   output$airports_map <- renderLeaflet({
     leaflet() %>%
-      addTiles(urlTemplate = "http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", attribution = "Google", group = "Google") %>%
-      addProviderTiles(provider = providers$Wikimedia, group = "Wiki") %>%
-      setView(-97.8216, 40.4469, 4) %>%
-      addLayersControl(baseGroups = c("Google", "Wiki"))
+      addProviderTiles(provider = providers$OpenStreetMap.Mapnik, group = "Base") %>%
+      addProviderTiles(provider = providers$Stamen.Watercolor, group = "Watercolor") %>%
+      setView(-97.8216, 40.4469, 5) %>%
+      addLayersControl(baseGroups = c("Base", "Watercolor"))
   })
   
   # Airport Filtered data
   AirportInputs <- reactive({
     
-    # Si input$state_select in NULL entonces airports_filtered <- data.frame()
-    # Si no, entonces haz lo siguiente:
-    
-    # req(input$state_select) # I can control here, that if no state is sleected, the map will not update
-    # if(length(input$airport_select) > 0){
-    
-    # if (is.null(input$state)){
-    #   airport_filtered <- data.frame()
-    # } else {
     airport_filtered <- airports
     
     # Airports
-    
     airport_filtered <- subset(airport_filtered, airport_filtered$AIRPORT %in% input$airport_select)
     # }
     return(airport_filtered)
@@ -148,10 +142,13 @@ server <- function(input, output, session) {
   
   data_filtered <- reactive({
     req(input$state_select) # I can control here, that if no state is selected, the map will not update
-    data_filtered <- data
+    data_filtered <- data %>% 
     
-    # Airports
-    data_filtered <- subset(data_filtered, data_filtered$AIRPORT %in% input$airport_select)
+    # # Airports previously
+    # data_filtered <- subset(data_filtered, data_filtered$AIRPORT %in% input$airport_select)
+    #Years
+    filter(Year >= input$years_select[1] & Year <= input$years_select[2]) %>% 
+    filter(AIRPORT %in% input$airport_select)
     return(data_filtered)
   })
   
@@ -213,12 +210,12 @@ server <- function(input, output, session) {
     passengers_airports <-  merge(aggregate_passengers, airport_filtered, by.x = "AIRPORT", by.y = "AIRPORT")
     
     leafletProxy("airports_map", data = passengers_airports) %>%
-      # clear markers when aiirports changes, and the re do selection
+      # clear markers when airports changes, and the re do selection
       clearMarkers() %>%
-      addAwesomeMarkers(icon = icons, popup = ~paste0("<b>", 'project_na', "</b>: ", AIRPORT, '<p>', 'Total passengers: ', formatC(Total_Passengers, big.mark=",", format="d"), '</p>' ), group = "passengers_airports") %>% 
+      addAwesomeMarkers(icon = icons, popup = ~paste0("<b>", 'Airport selected', "</b>: ", AIRPORT, '<p>', '<b>', 'Total passengers for selected period: ','</b>', formatC(Total_Passengers, big.mark=",", format="d") ), group = "passengers_airports") %>% 
       # clear shapes when state selection changes, and then re do selection
       clearShapes() %>%
-      addPolygons(data = states_tomap(), fillColor = "red", fillOpacity = 0.5, color = "black", weight = 1)
+      addPolygons(data = states_tomap(), fillColor = "red", fillOpacity = 0.5, color = "black", weight = 1, popup = ~paste0("<b>", 'Selected state: ', "</b>", NAME))
   })
   
   # This is for the state part of the map

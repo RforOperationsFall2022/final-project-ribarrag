@@ -280,3 +280,4 @@ subset(states, states$NAME == subset_selection)
 
 
 class(airports)
+class(min(data$Year))
