@@ -55,7 +55,7 @@ airports <- subset(airports, airports$AIRPORT %in% data$AIRPORT)
 
 # Discard data with nulls
 data <- na.omit(data)
-
+airport_filtered <- airports
 icons <- makeAwesomeIcon(icon = "plane" , library = "fa", markerColor = "blue")
 
 # Define UI for application
@@ -124,21 +124,20 @@ server <- function(input, output, session) {
     leaflet() %>%
       addProviderTiles(provider = providers$OpenStreetMap.Mapnik, group = "Base") %>%
       addProviderTiles(provider = providers$Stamen.Watercolor, group = "Watercolor") %>%
-      setView(-97.8216, 40.4469, 5) %>%
+      setView(-97.8216, 40.4469, 4) %>%
       addLayersControl(baseGroups = c("Base", "Watercolor"))
   })
   
   # Airport Filtered data
   AirportInputs <- reactive({
-    
-    airport_filtered <- airports
-    
     # Airports
     airport_filtered <- subset(airport_filtered, airport_filtered$AIRPORT %in% input$airport_select)
     # }
     return(airport_filtered)
-    
   })
+  
+  # Debounce
+  AirportInputs <- debounce(AirportInputs, 500)
   
   data_filtered <- reactive({
     req(input$state_select) # I can control here, that if no state is selected, the map will not update
@@ -151,6 +150,7 @@ server <- function(input, output, session) {
     filter(AIRPORT %in% input$airport_select)
     return(data_filtered)
   })
+  data_filtered <- debounce(data_filtered, 500)
   
   # When input$state_select is changed, then the options available for aiport_select must change accordingly
   observeEvent(
@@ -198,6 +198,9 @@ server <- function(input, output, session) {
   observe({
     # If the airports change, then we do the rest
     req(input$state_select)
+    # # NUEVA LINEA
+    # on.exit(Sys.sleep(1))# aqui, esta atrasando todo!
+    # # NUEVA LINEA
     airport_filtered <- AirportInputs()
     
     # What if I create a join here to add the total of the airports selected
@@ -208,7 +211,7 @@ server <- function(input, output, session) {
       group_by(AIRPORT) %>%
       summarise(Total_Passengers = sum(Total))
     passengers_airports <-  merge(aggregate_passengers, airport_filtered, by.x = "AIRPORT", by.y = "AIRPORT")
-    
+
     leafletProxy("airports_map", data = passengers_airports) %>%
       # clear markers when airports changes, and the re do selection
       clearMarkers() %>%

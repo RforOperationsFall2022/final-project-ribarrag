@@ -4,17 +4,33 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 library(sf)
+library(datasets)
+library(shinyWidgets)
+library(stringr)
+library(shinyjs)
+library(plotly)
 
 # Read in data 
 airports <- read_csv("airports.csv")
 passengers <- read_csv("International_Report_Passengers.csv")
 data <- merge(airports, passengers, by.x="IATA", by.y="usg_apt")
+states_abb <- data.frame(datasets::state.name, datasets::state.abb)
+names(states_abb) <- c("states", "abbreviations") 
+states <- st_read("gz_2010_us_040_00_500k.json") 
+Airlines_code <- read_csv("Airlines_code.csv")
+
 
 # Discard three columns that are non useful identifiers of the airports
-# data <- data %>% select(-fg_apt_id, -fg_apt, -fg_wac)
+data <- data %>% select(-fg_apt_id, -fg_apt, -fg_wac)
+# Adios Alaska
+states_abb <- states_abb[!states_abb$states == 'Alaska',]
 
-data
-states <- st_read("gz_2010_us_040_00_500k.json") 
+data <- merge(data, states_abb, by.x = "STATE", by.y = "abbreviations")
+data$carriergroup = ifelse(data$carriergroup == 1, "Domestic", "Foreign")
+
+# Adios Alaska and territories
+airports <- merge(airports, states_abb, by.x = "STATE", by.y = "abbreviations")
+
 # Add centroids to states in case I want to use them
 states_centroids <- states %>% 
   st_centroid() %>% 
@@ -24,46 +40,63 @@ states_centroids <- states %>%
 states <- states %>% 
   left_join(states_centroids)
 
+states <- states[!(states$NAME %in% c('Alaska', 'District of Columbia', 'Puerto Rico')),]
+data <- merge(data, Airlines_code, by.x = "carrier", by.y = "Code", all.x = TRUE)
 
-# # Green Infrastructure
-# library(shiny)
-# library(shinythemes)
-# library(leaflet)
-# library(leaflet.extras)
-# 
-# library(shinyjs)
-# library(rgeos)
+# discard very small airports: discard those that have less than 500 cumulative passengers
+nosmall_airports <- data %>% group_by(STATE, AIRPORT) %>% 
+  summarise(total_passengers = sum(Total)) %>% 
+  filter(total_passengers >= 500)
 
+data <- data %>% filter(data$AIRPORT %in% nosmall_airports$AIRPORT)
 
+# Have the same airports in airports and in data
+airports <- subset(airports, airports$AIRPORT %in% data$AIRPORT)
 
-icons <- awesomeIconList(
-  MS4 = makeAwesomeIcon(icon = "road", library = "fa", markerColor = "gray"),
-  Combined = makeAwesomeIcon(icon = "cloud", library = "fa", markerColor = "blue"),
-  `Non-combined` = makeAwesomeIcon(icon = "tint", library = "fa", markerColor = "green"),
-  `On-site management` = makeAwesomeIcon(icon = "building-o", library = "fa", markerColor = "cadetblue")
-)
-
+# Discard data with nulls
+data <- na.omit(data)
+airport_filtered <- airports
+icons <- makeAwesomeIcon(icon = "plane" , library = "fa", markerColor = "blue")
 
 # Define UI for application
 ui <- navbarPage("U.S. Airports",
-                 # theme = shinytheme("united"),
                  tabPanel("Map",
                           sidebarLayout(
                             sidebarPanel(
+                              
+                              # Select State
+                              pickerInput("state_select",
+                                          "Select State: (the map will show your states selected in RED",
+                                          choices = unique(sort(states$NAME)),
+                                          selected = c("California", "Pennsylvania"), 
+                                          multiple = T),
+                              
+                              # Select years
+                              sliderInput("years_select",
+                                          "Select consumer's age range:",
+                                          value = c(1998, 2014), 
+                                          max = max(data$Year), min = min(data$Year), 
+                                          step = 1, sep = ""),
+                              
                               # Select State
                               selectInput("airport_select",
-                                          "Select aiport",
+                                          "Select airport",
                                           choices = unique(sort(airports$AIRPORT)),
-                                          selected = c("Albuquerque International"),
+                                          selected = c("San Diego International-Lindbergh", "Pittsburgh International"),
                                           selectize = T,
-                                          multiple = T)
-                              # ,
-                              # # Select NYC Borough
-                              # radioButtons("boroSelect",
-                              #              "Borough Filter:",
-                              #              choices = unique(sort(greenInf.load$borough)),
-                              #              selected = "Bronx")
+                                          multiple = T), 
+                              
+                              # Two graph to display in two tabs in the left panel
+                              tabsetPanel(
+                                tabPanel(title = "Total flyers over time, by carrier type", plotlyOutput("barchart_carrier")),
+                                tabPanel(title = "Top 5 carriers, based on total flyers", plotlyOutput("bar_carrier"))
+                              ),
+                              
+                              downloadButton("downloadData", "Download Raw Data of Selection")
+                              
                             ),
+                            
+                            
                             # Map Panel
                             mainPanel(
                               # Using Shiny JS
@@ -72,7 +105,7 @@ ui <- navbarPage("U.S. Airports",
                               tags$style(type = "text/css", ".leaflet {height: calc(100vh - 90px) !important;}
                                          body {background-color: #D4EFDF;}"),
                               # Map Page
-                              leafletOutput("leaflet")
+                              leafletOutput("airports_map")
                             )
                           )
                  ),
@@ -85,65 +118,129 @@ ui <- navbarPage("U.S. Airports",
 )
 
 # Define server logic required to create a map
-server <- function(input, output) {
+server <- function(input, output, session) {
   # Basic Map
-  output$leaflet <- renderLeaflet({
+  output$airports_map <- renderLeaflet({
     leaflet() %>%
-      addTiles(urlTemplate = "http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}&s=Ga", attribution = "Google", group = "Google") %>%
-      addProviderTiles(provider = providers$Wikimedia, group = "Wiki") %>%
+      addProviderTiles(provider = providers$OpenStreetMap.Mapnik, group = "Base") %>%
+      addProviderTiles(provider = providers$Stamen.Watercolor, group = "Watercolor") %>%
       setView(-97.8216, 40.4469, 4) %>%
-      addLayersControl(baseGroups = c("Google", "Wiki"))
+      addLayersControl(baseGroups = c("Base", "Watercolor"))
   })
-
+  
   # Airport Filtered data
   AirportInputs <- reactive({
-    if(length(input$airport_select) > 0){
-    airport_filtered <- airports
-
     # Airports
-    airport_filtered <- subset(airport_filtered, AIRPORT %in% input$airport_select)
-    }
-    # # Sewer type
-    # if (length(input$sewerSelect) > 0) {
-    #   airport_filtered <- subset(airport_filtered, sewer_type %in% input$sewerSelect)
+    airport_filtered <- subset(airport_filtered, airport_filtered$AIRPORT %in% input$airport_select)
     # }
-
     return(airport_filtered)
   })
   
+  # Debounce
+  AirportInputs <- debounce(AirportInputs, 500)
   
-    
-  # # Green Infrastructure Filtered data
-  # greenInfInputs <- reactive({
-  #   greenInf <- greenInf.load 
-  #   
-  #   # Boros
-  #   greenInf <- subset(greenInf, borough == input$boroSelect)
-  #   # Sewer type
-  #   if (length(input$sewerSelect) > 0) {
-  #     greenInf <- subset(greenInf, sewer_type %in% input$sewerSelect)
-  #   }
-  #   
-  #   return(greenInf)
-  # })
+  data_filtered <- reactive({
+    req(input$state_select) # I can control here, that if no state is selected, the map will not update
+    data_filtered <- data %>% 
+      
+      # # Airports previously
+      # data_filtered <- subset(data_filtered, data_filtered$AIRPORT %in% input$airport_select)
+      #Years
+      filter(Year >= input$years_select[1] & Year <= input$years_select[2]) %>% 
+      filter(AIRPORT %in% input$airport_select)
+    return(data_filtered)
+  })
+  data_filtered <- debounce(data_filtered, 500)
+  
+  # When input$state_select is changed, then the options available for aiport_select must change accordingly
+  observeEvent(
+    input$state_select, {
+      updateSelectInput(session, "airport_select",
+                        label = "Select airport",
+                        choices = subset(airports$AIRPORT, airports$states %in% input$state_select), 
+                        selected = input$airport_select)
+    })
+  
+  data_barchart <- reactive({
+    req(input$airport_select)
+    data_forbar <- data_filtered()
+    data_forbar %>% 
+      group_by(Year, carriergroup) %>%
+      summarise(total_passengers = sum(Total), .groups = "drop_last")
+  })
+  
+  data_carriers <- reactive({
+    req(input$airport_select)
+    data_filtered() %>%
+      group_by(Airline) %>%
+      summarise(total_passengers = sum(Total), .groups = "drop_last") %>%
+      arrange(desc(total_passengers)) %>%
+      top_n(5, total_passengers)
+  })
+  
+  
+  output$barchart_carrier <- renderPlotly({
+    ggplot(data_barchart(), aes(x = Year, y = total_passengers, fill = carriergroup)) + 
+      geom_bar(stat = 'identity')
+  })
+  
+  
+  # cambios: hacer bargraph y con top 5
+  output$bar_carrier <- renderPlotly({
+    ggplot(data_carriers(), aes(x = reorder(Airline, desc(total_passengers)), y = total_passengers)) +
+      geom_bar(stat = 'identity') +
+      scale_x_discrete(labels =str_wrap((data_carriers()$Airline), width = 10)) +
+      theme(axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 12, face = 'bold')) + 
+      xlab("Airline") 
+  })
   
   # Replace layer with filtered airports
   observe({
-    # If the greenInf changes, then we do the rest
+    # If the airports change, then we do the rest
+    req(input$state_select)
+    # # NUEVA LINEA
+    # on.exit(Sys.sleep(1))# aqui, esta atrasando todo!
+    # # NUEVA LINEA
     airport_filtered <- AirportInputs()
-    # Data is greenInf
-    leafletProxy("leaflet", data = airport_filtered) %>%
-      # In this case either lines 90 or 92 will work
-      # 1 First clear all the markers, make the map blank
+    
+    # What if I create a join here to add the total of the airports selected
+    # This is the data already filtered, containing only the relevant airports, same airports as in airport_filtered
+    data_filtered()
+    
+    aggregate_passengers <- data_filtered() %>%
+      group_by(AIRPORT) %>%
+      summarise(Total_Passengers = sum(Total))
+    passengers_airports <-  merge(aggregate_passengers, airport_filtered, by.x = "AIRPORT", by.y = "AIRPORT")
+    
+    leafletProxy("airports_map", data = passengers_airports) %>%
+      # clear markers when airports changes, and the re do selection
       clearMarkers() %>%
-      # we can also clear group, just in case
-      # clearGroup(group = "greenInf") %>%
-      # Apply the awesome markers, sewer_type is the data that we want to apply the icons to. The icons is defined up there
-      addAwesomeMarkers(icon = ~icons[AIRPORT], popup = ~paste0("<b>", 'project_na', "</b>: ", AIRPORT), group = "airport_filtered")#, layerId = ~asset_id)
-    # leafletProxy("leaflet") %>% update
+      addAwesomeMarkers(icon = icons, popup = ~paste0("<b>", 'Airport selected', "</b>: ", AIRPORT, '<p>', '<b>', 'Total passengers for selected period: ','</b>', formatC(Total_Passengers, big.mark=",", format="d") ), group = "passengers_airports") %>% 
+      # clear shapes when state selection changes, and then re do selection
+      clearShapes() %>%
+      addPolygons(data = states_tomap(), fillColor = "red", fillOpacity = 0.5, color = "black", weight = 1, popup = ~paste0("<b>", 'Selected state: ', "</b>", NAME))
   })
+  
+  # This is for the state part of the map
+  states_tomap <- reactive({
+    states_map <- subset(states, states$NAME %in% input$state_select)
+    
+    return(states_map)
+  })
+  
   # Data Table
-  output$table <- DT::renderDataTable(greenInfInputs()@data, options = list(scrollX = T))
+  output$table <- DT::renderDataTable(data_filtered(), options = list(scrollX = T))
+  
+  # Download
+  output$downloadData <- downloadHandler(
+    filename = function(){
+      paste("Airport_passengersdata_", Sys.Date(), ".csv", sep="")
+    },
+    content = function(file){
+      write.csv(data_filtered(), file, row.names = FALSE)
+    }
+  )
+  
   # Print Inputs
   observe({
     print(reactiveValuesToList(input))
@@ -152,68 +249,3 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 
-# # Create user interface
-# ui <- fluidPage(
-#   
-#   # App title
-#   titlePanel("US Airports Map & Histogram"),
-#   
-#   # Sidebar layout with a input and output definitions
-#   sidebarLayout(
-#     
-#     # Sidebar panel for inputs
-#     sidebarPanel(
-#       
-#       leafletOutput("map", width = "100%")
-#     ),
-#     
-#     # Main panel for displaying outputs
-#     mainPanel(
-#       plotOutput("hist")
-#     )
-#   )
-# )
-# 
-# # Create server logic
-# server <- function(input, output) {
-#   
-#   # Render map
-#   output$map <- renderLeaflet({
-#     # Use leaflet() here, and only pass in the data
-#     leaflet() %>% 
-#       addTiles() %>%
-#       addMarkers(data=data, lng=~long, lat=~lat)
-#   })
-#   
-#   # Create a reactive expression to filter the data based on user input
-#   filteredData <- reactive({
-#     data %>%
-#       filter(long == input$map_marker_lng & lat == input$map_marker_lat)
-#   })
-#   
-#   # Render histogram
-#   output$hist <- renderPlot({
-#     ggplot(data=filteredData(), aes(x=Month, y=Total)) + 
-#       geom_histogram(binwidth=100000, fill="blue", color="black") +
-#       labs(x="Month", y="Total Passengers")
-#   })
-#   
-# }
-# 
-# # Create Shiny app object
-# shinyApp(ui = ui, server = server)
