@@ -8,6 +8,7 @@ library(datasets)
 library(shinyWidgets)
 library(stringr)
 library(shinyjs)
+library(plotly)
 
 # Read in data 
 airports <- read_csv("airports.csv")
@@ -83,8 +84,8 @@ ui <- navbarPage("U.S. Airports",
                               
                               # Two graph to display in two tabs in the left panel
                               tabsetPanel(
-                                tabPanel(title = "Total flyers over time, by carrier type", plotOutput(outputId = "barchart_carrier")),
-                                tabPanel(title = "Top 5 carriers, based on total flyers", plotOutput(outputId = "bar_carrier"))
+                                tabPanel(title = "Total flyers over time, by carrier type", plotlyOutput("barchart_carrier")),
+                                tabPanel(title = "Top 5 carriers, based on total flyers", plotlyOutput("bar_carrier"))
                               ),
                               
                               downloadButton("downloadData", "Download Raw Data of Selection")
@@ -181,16 +182,14 @@ server <- function(input, output, session) {
   })
   
   
-  output$barchart_carrier <- renderPlot({
+  output$barchart_carrier <- renderPlotly({
     ggplot(data_barchart(), aes(x = Year, y = total_passengers, fill = carriergroup)) + 
       geom_bar(stat = 'identity')
-    
-    
   })
   
   
   # cambios: hacer bargraph y con top 5
-  output$bar_carrier <- renderPlot({
+  output$bar_carrier <- renderPlotly({
     ggplot(data_carriers(), aes(x = reorder(Airline, desc(total_passengers)), y = total_passengers)) +
       geom_bar(stat = 'identity') +
       scale_x_discrete(labels =str_wrap((data_carriers()$Airline), width = 10)) +
