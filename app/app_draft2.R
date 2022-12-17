@@ -9,6 +9,8 @@ library(shinyWidgets)
 library(stringr)
 library(shinyjs)
 library(plotly)
+library(shinythemes)
+library(scales)
 
 # Read in data 
 airports <- read_csv("airports.csv")
@@ -19,12 +21,11 @@ names(states_abb) <- c("states", "abbreviations")
 states <- st_read("gz_2010_us_040_00_500k.json") 
 Airlines_code <- read_csv("Airlines_code.csv")
 
-
+# Cleaning, shaping and merging
 # Discard three columns that are non useful identifiers of the airports
 data <- data %>% select(-fg_apt_id, -fg_apt, -fg_wac)
-# Adios Alaska
+# Adios Alaska and territories: not plotting Alaska
 states_abb <- states_abb[!states_abb$states == 'Alaska',]
-
 data <- merge(data, states_abb, by.x = "STATE", by.y = "abbreviations")
 data$carriergroup = ifelse(data$carriergroup == 1, "Domestic", "Foreign")
 
@@ -47,7 +48,6 @@ data <- merge(data, Airlines_code, by.x = "carrier", by.y = "Code", all.x = TRUE
 nosmall_airports <- data %>% group_by(STATE, AIRPORT) %>% 
   summarise(total_passengers = sum(Total)) %>% 
   filter(total_passengers >= 500)
-
 data <- data %>% filter(data$AIRPORT %in% nosmall_airports$AIRPORT)
 
 # Have the same airports in airports and in data
@@ -60,13 +60,14 @@ icons <- makeAwesomeIcon(icon = "plane" , library = "fa", markerColor = "blue")
 
 # Define UI for application
 ui <- navbarPage("U.S. Airports",
+                 theme = shinytheme("flatly"),
                  tabPanel("Map",
                           sidebarLayout(
                             sidebarPanel(
                               
                               # Select State
                               pickerInput("state_select",
-                                          "Select State: (the map will show your states selected in RED",
+                                          "Select State:",
                                           choices = unique(sort(states$NAME)),
                                           selected = c("California", "Pennsylvania"), 
                                           multiple = T),
@@ -88,14 +89,13 @@ ui <- navbarPage("U.S. Airports",
 
                               # Two graph to display in two tabs in the left panel
                               tabsetPanel(
-                                tabPanel(title = "Total flyers over time, by carrier type", plotlyOutput("barchart_carrier")),
-                                tabPanel(title = "Top 5 carriers, based on total flyers", plotlyOutput("bar_carrier"))
+                                tabPanel(title = "Total flyers by domestic or foreign carrier", plotlyOutput("barchart_carrier")),
+                                tabPanel(title = "Total flyers: top 5 carriers", plotlyOutput("bar_carrier"))
                               ),
-                              
+                              # Download button
                               downloadButton("downloadData", "Download Raw Data of Selection")
                               
                             ),
-                            
                             
                             # Map Panel
                             mainPanel(
@@ -109,7 +109,7 @@ ui <- navbarPage("U.S. Airports",
                             )
                           )
                  ),
-                 # Data Table Pannel
+                 # Data Table Panel
                  tabPanel("Data",
                           fluidPage(
                             wellPanel(DT::dataTableOutput("table"))
@@ -117,9 +117,9 @@ ui <- navbarPage("U.S. Airports",
                  )
 )
 
-# Define server logic required to create a map
+# Define server
 server <- function(input, output, session) {
-  # Basic Map
+  # Map, Watercolor and Base
   output$airports_map <- renderLeaflet({
     leaflet() %>%
       addProviderTiles(provider = providers$OpenStreetMap.Mapnik, group = "Base") %>%
@@ -136,20 +136,19 @@ server <- function(input, output, session) {
     return(airport_filtered)
   })
   
-  # Debounce
+  # Debounce in case user goes wild on the airport selection, this affects map
   AirportInputs <- debounce(AirportInputs, 500)
   
   data_filtered <- reactive({
     req(input$state_select) # I can control here, that if no state is selected, the map will not update
     data_filtered <- data %>% 
     
-    # # Airports previously
-    # data_filtered <- subset(data_filtered, data_filtered$AIRPORT %in% input$airport_select)
     #Years
     filter(Year >= input$years_select[1] & Year <= input$years_select[2]) %>% 
     filter(AIRPORT %in% input$airport_select)
     return(data_filtered)
   })
+  # Debounce in case user goes wild on the airport selection, this affects graphs
   data_filtered <- debounce(data_filtered, 500)
   
   # When input$state_select is changed, then the options available for aiport_select must change accordingly
@@ -161,6 +160,7 @@ server <- function(input, output, session) {
                         selected = input$airport_select)
     })
   
+  # Reactive data for the bar chart
   data_barchart <- reactive({
     req(input$airport_select)
     data_forbar <- data_filtered()
@@ -169,6 +169,7 @@ server <- function(input, output, session) {
       summarise(total_passengers = sum(Total), .groups = "drop_last")
   })
   
+  # Reactive data for the first graph
   data_carriers <- reactive({
     req(input$airport_select)
     data_filtered() %>%
@@ -178,35 +179,42 @@ server <- function(input, output, session) {
       top_n(5, total_passengers)
   })
   
-  
+  # Display first graph
   output$barchart_carrier <- renderPlotly({
     ggplot(data_barchart(), aes(x = Year, y = total_passengers, fill = carriergroup)) + 
-      geom_bar(stat = 'identity')
+      geom_bar(stat = 'identity') +
+      ylab("Total passengers") +
+      scale_y_continuous(labels = label_comma()) +
+      theme(axis.text.x = element_text(size = 10), axis.title.x = element_text(size = 11, face = 'bold'),
+            axis.title.y = element_text(size = 11, face = 'bold')) + 
+      scale_fill_manual(values = c('#0F1CA7', '#3484CD')) +
+      guides(fill = guide_legend(title = "Carrier"))     # This is getting rid of the legend, which I like better. User can hover over 
+                                                         # bars and easily notice dark blue is domestic, light blue is foreign carrier
+
   })
   
   
-  # cambios: hacer bargraph y con top 5
+  # second graph: bar graph of passengers by top carriers
   output$bar_carrier <- renderPlotly({
     ggplot(data_carriers(), aes(x = reorder(Airline, desc(total_passengers)), y = total_passengers)) +
-      geom_bar(stat = 'identity') +
+      geom_bar(stat = 'identity', fill = '#0F1CA7') +
       scale_x_discrete(labels =str_wrap((data_carriers()$Airline), width = 10)) +
-      theme(axis.text.x = element_text(size = 11), axis.title.x = element_text(size = 12, face = 'bold')) + 
-      xlab("Airline") 
+      theme(axis.text.x = element_text(size = 9), axis.title.x = element_text(size = 11, face = 'bold'), 
+            axis.title.y = element_text(size = 11, face = 'bold')) + 
+      xlab("Airline") +
+      ylab("Total passengers") +
+      scale_y_continuous(labels = label_comma())
+      
   })
   
   # Replace layer with filtered airports
   observe({
     # If the airports change, then we do the rest
     req(input$state_select)
-    # # NUEVA LINEA
-    # on.exit(Sys.sleep(1))# aqui, esta atrasando todo!
-    # # NUEVA LINEA
     airport_filtered <- AirportInputs()
-    
-    # What if I create a join here to add the total of the airports selected
-    # This is the data already filtered, containing only the relevant airports, same airports as in airport_filtered
     data_filtered()
     
+    # Getting data to the correct shape for map
     aggregate_passengers <- data_filtered() %>%
       group_by(AIRPORT) %>%
       summarise(Total_Passengers = sum(Total))
@@ -218,13 +226,12 @@ server <- function(input, output, session) {
       addAwesomeMarkers(icon = icons, popup = ~paste0("<b>", 'Airport selected', "</b>: ", AIRPORT, '<p>', '<b>', 'Total passengers for selected period: ','</b>', formatC(Total_Passengers, big.mark=",", format="d") ), group = "passengers_airports") %>% 
       # clear shapes when state selection changes, and then re do selection
       clearShapes() %>%
-      addPolygons(data = states_tomap(), fillColor = "red", fillOpacity = 0.5, color = "black", weight = 1, popup = ~paste0("<b>", 'Selected state: ', "</b>", NAME))
+      addPolygons(data = states_tomap(), fillColor = "green", fillOpacity = 0.5, color = "black", weight = 1, popup = ~paste0("<b>", 'Selected state: ', "</b>", NAME))
   })
   
   # This is for the state part of the map
   states_tomap <- reactive({
     states_map <- subset(states, states$NAME %in% input$state_select)
-    
     return(states_map)
   })
   
@@ -240,11 +247,6 @@ server <- function(input, output, session) {
       write.csv(data_filtered(), file, row.names = FALSE)
     }
   )
-  
-  # Print Inputs
-  observe({
-    print(reactiveValuesToList(input))
-  })
 }
 
 # Run the application 
